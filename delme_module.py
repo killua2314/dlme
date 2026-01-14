@@ -13,7 +13,7 @@ class DeleteMyMessagesMod(loader.Module):
         "start_all": "🧹 Удаляю все ваши сообщения в чате...",
         "start_topic": "🧹 Удаляю ваши сообщения в этом топике...",
         "done": "✅ Готово! Удалено сообщений: {}",
-        "no_topic": "⚠️ Команду нужно вызвать ответом на сообщение в топике."
+        "no_topic": "⚠️ В этом чате нет топика."
     }
 
     async def delmecmd(self, message):
@@ -34,22 +34,22 @@ class DeleteMyMessagesMod(loader.Module):
         await status.edit(self.strings["done"].format(count))
 
     async def delmetopiccmd(self, message):
-        """Удалить ваши сообщения только в текущем топике"""
+        """Удалить все ваши сообщения только в текущем топике"""
         chat = message.chat_id
+        # Берём ID текущего топика
+        topic_id = getattr(message, "message_thread_id", None)
 
-        # Проверяем, что команда вызвана ответом на сообщение
-        if not message.reply_to or not getattr(message.reply_to, "top_msg_id", None):
+        if not topic_id:
             await utils.answer(message, self.strings["no_topic"])
             return
 
-        topic_id = message.reply_to.top_msg_id
         me = await self.client.get_me()
         status = await utils.answer(message, self.strings["start_topic"])
 
         count = 0
         async for msg in self.client.iter_messages(chat, from_user=me.id):
             try:
-                if msg.reply_to and getattr(msg.reply_to, "top_msg_id", None) == topic_id:
+                if getattr(msg, "message_thread_id", None) == topic_id:
                     await msg.delete()
                     count += 1
             except Exception:
