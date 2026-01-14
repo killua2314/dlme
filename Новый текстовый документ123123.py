@@ -37,4 +37,22 @@ class DeleteMyMessagesMod(loader.Module):
         """Удалить ваши сообщения только в текущем топике"""
         chat = message.chat_id
 
-        if not
+        # Проверяем, что команда вызвана ответом на сообщение
+        if not message.reply_to or not getattr(message.reply_to, "top_msg_id", None):
+            await utils.answer(message, self.strings["no_topic"])
+            return
+
+        topic_id = message.reply_to.top_msg_id
+        me = await self.client.get_me()
+        status = await utils.answer(message, self.strings["start_topic"])
+
+        count = 0
+        async for msg in self.client.iter_messages(chat, from_user=me.id):
+            try:
+                if msg.reply_to and getattr(msg.reply_to, "top_msg_id", None) == topic_id:
+                    await msg.delete()
+                    count += 1
+            except Exception:
+                continue
+
+        await status.edit(self.strings["done"].format(count))
