@@ -1,4 +1,4 @@
-# meta developer: @yourname
+# meta developer: @killua2314
 # scope: hikka_only
 # scope: hikka_min 1.6.0
 
@@ -27,3 +27,6 @@ class DeleteMyMessagesMod(loader.Module):
                 await msg.delete()
                 count += 1
             except Exception:
+                continue
+
+        await status.edit(self.strings["done"].format(count))
